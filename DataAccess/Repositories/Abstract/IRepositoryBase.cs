@@ -1,11 +1,14 @@
-﻿namespace DataAccess.Repositories.Abstract
+﻿using System.Linq.Expressions;
+
+namespace DataAccess.Repositories.Abstract
 {
     public interface IRepositoryBase<TEntity> where TEntity : class
     {
-        public Task<TEntity> GetByIdAsync(int id);
+        public Task<TEntity?> GetByIdAsync(int id);
         public IQueryable<TEntity> GetAll();
-        public Task UpdateAsync(int id, TEntity entity);
-        public Task Delete(TEntity entity);
+        public void Update(TEntity entity);
+        public void Delete(TEntity entity);
         public Task CreateAsync(TEntity entity);
+        public IQueryable<TEntity> GetAllFiltered(Expression<Func<TEntity, bool>> predict);
     }
 }
