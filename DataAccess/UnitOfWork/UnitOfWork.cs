@@ -21,19 +21,19 @@ namespace DataAccess.UnitOfWork
         private IRoomRepository _roomRepository;
         private IRoomTypeRepository _roomTypeRepository;
 
-        public IGuestRepository GuestRepository => _guestRepository ??= new GuestRepository();
+        public IGuestRepository GuestRepository => _guestRepository ??= new GuestRepository(_context);
 
-        public IHotelRepository HotelRepository => _hotelRepository ??= new HotelRepository();
+        public IHotelRepository HotelRepository => _hotelRepository ??= new HotelRepository(_context);
 
-        public IMaintenanceRepository MaintenanceRepository => _maintenanceRepository ??= new MaintenanceRepository();
+        public IMaintenanceRepository MaintenanceRepository => _maintenanceRepository ??= new MaintenanceRepository(_context);
 
-        public IPaymentRepository PaymentRepository => _paymentRepository ??= new PaymentRepository();
+        public IPaymentRepository PaymentRepository => _paymentRepository ??= new PaymentRepository(_context);
 
-        public IReservationRepository ReservationRepository => _reservationRepository ??= new ReservationRepository();
+        public IReservationRepository ReservationRepository => _reservationRepository ??= new ReservationRepository(_context);
 
-        public IRoomRepository RoomRepository => _roomRepository ??= new RoomRepository();
+        public IRoomRepository RoomRepository => _roomRepository ??= new RoomRepository(_context);
 
-        public IRoomTypeRepository RoomTypeRepository => _roomTypeRepository ??= new RoomTypeRepository();
+        public IRoomTypeRepository RoomTypeRepository => _roomTypeRepository ??= new RoomTypeRepository(_context);
 
         public void Dispose()
         {

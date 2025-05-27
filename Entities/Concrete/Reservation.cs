@@ -7,6 +7,7 @@
         public virtual Room Room { get; set; }
         public int GuestId { get; set; }
         public virtual Guest Guest { get; set; }
+        public decimal TotalAmount { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public ReservationStatus Status { get; set; }

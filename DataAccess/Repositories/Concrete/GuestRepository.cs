@@ -1,4 +1,5 @@
-﻿using DataAccess.Repositories.Abstract;
+﻿using DataAccess.Context;
+using DataAccess.Repositories.Abstract;
 using Entities.Concrete;
 using System;
 using System.Collections.Generic;
@@ -10,5 +11,8 @@ namespace DataAccess.Repositories.Concrete
 {
     public class GuestRepository : RepositoryBase<Guest>, IGuestRepository
     {
+        public GuestRepository(AppDbContext context) : base(context)
+        {
+        }
     }
 }

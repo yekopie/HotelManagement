@@ -68,6 +68,7 @@ namespace DataAccess.Migrations
                     HotelId = table.Column<int>(type: "int", nullable: false),
                     RoomTypeId = table.Column<int>(type: "int", nullable: false),
                     floor = table.Column<int>(type: "int", nullable: false),
+                    RoomNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PricePerNight = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IsAvailable = table.Column<byte>(type: "tinyint", nullable: false),
                     IsClean = table.Column<byte>(type: "tinyint", nullable: false),
