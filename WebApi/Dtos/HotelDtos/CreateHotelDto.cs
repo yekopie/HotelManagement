@@ -10,7 +10,6 @@ namespace WebApi.Dtos.HotelDtos
         public string Phone { get; set; }
         public int StarRating { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<Room> Rooms { get; set; }
     }
 }
 
