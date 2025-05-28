@@ -1,6 +1,6 @@
 ﻿using Entities.Concrete;
 
-namespace WebApi.Dtos
+namespace WebApi.Dtos.HotelDtos
 {
     public class UpdateHotelDto
     {

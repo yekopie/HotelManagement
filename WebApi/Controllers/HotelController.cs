@@ -26,7 +26,7 @@ public class HotelController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetByIdAsync([FromRoute]int id)
+    public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
         var hotel = await _unitOfWork.HotelRepository.GetByIdAsync(id);
         return Ok(hotel);
@@ -43,3 +43,11 @@ public class HotelController : ControllerBase
     {
         return Ok();
     }
+    [HttpGet]
+    public async Task<IActionResult> DeleteHotelAsync([FromRoute]int id)
+    {
+        return Ok();
+    }
+
+
+}

@@ -1,4 +1,5 @@
 ﻿using Entities.Concrete;
+using WebApi.Dtos.RoomDtos;
 
 namespace WebApi.Dtos.HotelDtos
 {
@@ -11,7 +12,7 @@ namespace WebApi.Dtos.HotelDtos
         public string Phone { get; set; }
         public int StarRating { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<Room> Rooms { get; set; }
+        public List<RoomDto> Rooms { get; set; }
     }
 }
 
