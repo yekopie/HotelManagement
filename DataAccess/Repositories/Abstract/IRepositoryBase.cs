@@ -13,6 +13,7 @@ namespace DataAccess.Repositories.Abstract
         public Task<(IEnumerable<TEntity> data, int totalCount)> GetPagedByFilterAsync(Expression<Func<TEntity, bool>> predict, int page, int size);
         public void Delete(TEntity entity);
         public Task CreateAsync(TEntity entity);
+        public void Update(TEntity entity);
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         void RemoveRange(IEnumerable<TEntity> entities);
 
