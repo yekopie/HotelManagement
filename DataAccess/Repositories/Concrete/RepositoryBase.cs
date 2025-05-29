@@ -14,6 +14,12 @@ namespace DataAccess.Repositories.Concrete
             _context = context;
             _dbSet = context.Set<TEntity>();
         }
+
+        public async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        {
+            await _dbSet.AddRangeAsync(entities);
+        }
+
         public async Task CreateAsync(TEntity entity)
         {
             await _dbSet.AddAsync(entity);
@@ -29,6 +35,16 @@ namespace DataAccess.Repositories.Concrete
             return _dbSet.AsNoTracking();
         }
 
+        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        {
+            return await _dbSet.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<TEntity>> GetAllByFilterAsync(Expression<Func<TEntity, bool>> predict)
+        {
+            return await _dbSet.AsNoTracking().Where(predict).ToListAsync();
+        }
+
         public IQueryable<TEntity> GetAllFiltered(Expression<Func<TEntity, bool>> predict)
         {
             return _dbSet.Where(predict).AsNoTracking();
@@ -37,6 +53,38 @@ namespace DataAccess.Repositories.Concrete
         public async Task<TEntity?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
+        }
+
+        public IQueryable<TEntity> GetFilteredQueryable(Expression<Func<TEntity, bool>> predict)
+        {
+            return _dbSet.AsNoTracking().Where(predict);
+        }
+
+        public async Task<(IEnumerable<TEntity> data, int totalCount)> GetPagedAsync(int page, int size)
+        {
+            int totalCount = await _dbSet.AsNoTracking().CountAsync();
+            IEnumerable<TEntity> data = await _dbSet.AsNoTracking().Skip((page - 1) * size).Take(size).ToListAsync();
+
+            return (data, totalCount);
+        }
+
+        public async Task<(IEnumerable<TEntity> data, int totalCount)> GetPagedByFilterAsync(Expression<Func<TEntity, bool>> predict, int page, int size)
+        {
+            int totalCount = await _dbSet.AsNoTracking().Where(predict).CountAsync();
+            IEnumerable<TEntity> data = await _dbSet.AsNoTracking().Where(predict)
+                .Skip((page - 1) * size).Take(size).ToListAsync();
+
+            return (data, totalCount);
+        }
+
+        public IQueryable<TEntity> GetQueryable()
+        {
+            return _dbSet.AsNoTracking();
+        }
+
+        public void RemoveRange(IEnumerable<TEntity> entities)
+        {
+            _dbSet.RemoveRange(entities);
         }
 
         public void Update(TEntity entity)
