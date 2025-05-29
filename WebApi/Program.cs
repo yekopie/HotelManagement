@@ -39,17 +39,7 @@ namespace WebApi
 
 
             app.MapControllers();
-            /*app.UseExceptionHandler(errorApp =>
-            {
-                errorApp.Run(async context =>
-                {
-                    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-                    if (exception != null)
-                    {
-                        Console.WriteLine($"Hata: {exception.Message}");
-                    }
-                });
-            });*/
+
             app.Run();
         }
     }
