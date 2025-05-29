@@ -22,7 +22,7 @@ public class MaintenancesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()
     {
-        var maintenances = await _unitOfWork.MaintenanceRepository.GetAll().ToListAsync();
+        var maintenances = await _unitOfWork.MaintenanceRepository.GetAllAsync();
         return Ok();
     }
     [HttpGet("{id}")]

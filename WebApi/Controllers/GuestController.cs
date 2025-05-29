@@ -21,7 +21,7 @@ public class GuestsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()
     {
-        var guests = await _unitOfWork.GuestRepository.GetAll().ToListAsync();
+        var guests = await _unitOfWork.GuestRepository.GetAllAsync();
         return Ok(guests);
     }
 
