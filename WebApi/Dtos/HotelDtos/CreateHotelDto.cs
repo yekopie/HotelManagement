@@ -9,7 +9,7 @@ namespace WebApi.Dtos.HotelDtos
         public string Address { get; set; }
         public string Phone { get; set; }
         public int StarRating { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     }
 }
 

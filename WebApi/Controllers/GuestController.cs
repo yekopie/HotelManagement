@@ -9,14 +9,14 @@ namespace WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class GuestController : ControllerBase
+public class GuestsController : ControllerBase
 {
-        private IUnitOfWork _unitOfWork;
+    private IUnitOfWork _unitOfWork;
 
-        public GuestController(IUnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
+    public GuestsController(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAllAsync()

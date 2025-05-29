@@ -9,11 +9,11 @@ namespace WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class MaintenanceController : ControllerBase
+public class MaintenancesController : ControllerBase
 {
     private IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    public MaintenanceController(IUnitOfWork unitOfWork, IMapper mapper)
+    public MaintenancesController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -42,21 +42,21 @@ public class MaintenanceController : ControllerBase
     {
 
         await _unitOfWork.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = maintenance.Id }, maintenance);
+        return CreatedAtAction(nameof(GetByIdAsync), maintenance);
     }
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateMaintenanceAsync([FromRoute] int id, [FromBody] UpdateMaintenanceDto maintenance)
     {
-        if (id != maintenance.Id)
+        /*if (id != maintenance.)
         {
             return BadRequest("Maintenance ID mismatch.");
-        }
+        }*/
         var UpdateMaintenance = await _unitOfWork.MaintenanceRepository.GetByIdAsync(id);
         if (UpdateMaintenance == null)
         {
             return NotFound();
         }
-        _unitOfWork.MaintenanceRepository.Update(maintenance);
+        //_unitOfWork.MaintenanceRepository.Update(maintenance);
         await _unitOfWork.SaveChangesAsync();
 
         return NoContent();

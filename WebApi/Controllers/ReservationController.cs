@@ -5,6 +5,10 @@ namespace WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ReservationController : ControllerBase
+public class ReservationsController : ControllerBase
 {
+    public ReservationsController()
+    {
+        
+    }
 }

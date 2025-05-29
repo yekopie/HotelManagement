@@ -3,6 +3,7 @@ using DataAccess.Context;
 using DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using WebApi.Mapping;
 
 namespace WebApi
 {
@@ -20,7 +21,7 @@ namespace WebApi
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             var app = builder.Build();
             
             // Configure the HTTP request pipeline.
