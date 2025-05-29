@@ -35,21 +35,19 @@ namespace DataAccess.UnitOfWork
 
         public IRoomTypeRepository RoomTypeRepository => _roomTypeRepository ??= new RoomTypeRepository(_context);
 
-        public void Dispose()
-        {
-            if (!_disposed)
-            {
-                Dispose();
-                // Suppress finalization.
-                GC.SuppressFinalize(this);
-            }
-            
-            _disposed = true;
-        }
-
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _context.Dispose(); // DbContext varsa
+            _disposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 }
