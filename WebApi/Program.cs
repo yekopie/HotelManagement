@@ -1,6 +1,7 @@
 
 using DataAccess.Context;
 using DataAccess.UnitOfWork;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using WebApi.Mapping;
@@ -22,6 +23,8 @@ namespace WebApi
                 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+     
             var app = builder.Build();
             
             // Configure the HTTP request pipeline.
@@ -30,13 +33,23 @@ namespace WebApi
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseCors(c => c.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod());
+            
             app.UseHttpsRedirection();
             app.UseAuthorization();
 
 
             app.MapControllers();
-
+            /*app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+                    if (exception != null)
+                    {
+                        Console.WriteLine($"Hata: {exception.Message}");
+                    }
+                });
+            });*/
             app.Run();
         }
     }

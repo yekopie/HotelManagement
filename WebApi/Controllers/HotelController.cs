@@ -34,15 +34,15 @@ public class HotelsController : ControllerBase
     [HttpGet("{id}/rooms")]
     public async Task<IActionResult> GetHotelRoomsAsync([FromRoute] int id)
     {
-        var rooms = await _unitOfWork.RoomRepository.GetAllByFilterAsync(r => r.HotelId == id);
-        //var hotelDto = _mapper.Map<HotelDto>(hotel);
-        return Ok(rooms);
+        var result = await _unitOfWork.HotelRepository.GetQueryable()
+            .Include(h => h.Rooms).Where(h => h.Id == id).FirstOrDefaultAsync();
+        var hotelDto = _mapper.Map<HotelDto>(result);
+        return Ok(hotelDto);
     }
 
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] int currentPage, [FromQuery] int size)
-    {
-        // totalcount 
+    {     
         (IEnumerable<Hotel> hotels, int totalCount) = await _unitOfWork.HotelRepository.GetPagedAsync(currentPage, size);
 
         return Ok(new { hotels, totalCount });
