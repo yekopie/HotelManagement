@@ -19,7 +19,7 @@ namespace WebApi.ValidatonRules
             var dto = context.ActionArguments.Values.OfType<T>().FirstOrDefault();
             if (dto == null)
             {
-                throw new ValidationException($"{nameof(dto)}, null olamaz");
+                throw new WebApi.Exceptions.ValidationException($"{nameof(dto)}, null olamaz");
             }
             var result = await _validator.ValidateAsync(dto);
             if (!result.IsValid)
