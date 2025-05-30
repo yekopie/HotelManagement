@@ -13,7 +13,7 @@ public class PaymentsController : ControllerBase
     private IUnitOfWork _unitOfWork;
     private IMapper _mapper;
 
-    public PaymentController(IUnitOfWork unitOfWork, IMapper mapper)
+    public PaymentsController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;

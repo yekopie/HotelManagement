@@ -10,6 +10,10 @@ using Entities.Concrete;
 using WebApi.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using WebApi.ValidatonRules;
+using Core.Utilities.Results.Concrete;
+using Core.Utilities.Results.Abstract;
+using Core.Utilities.Business;
+using Core.Utilities.Results;
 
 namespace WebApi.Controllers;
 
@@ -45,17 +49,13 @@ public class GuestsController : ControllerBase
         return Ok(result);
     }
     [HttpPost]
-    [ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
+    //[ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
     public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto guestDto)
     {
-        bool emailExists = await _unitOfWork.GuestRepository.GetQueryable()
-            .AnyAsync(g => g.Email == guestDto.Email);
-
-        if (emailExists) // iş kuralı
-        {
-            return BadRequest("Bu e-posta adresi zaten kayıtlı.");
-        }
-
+        
+        var result = BusinessRules.Run(CheckEmailIsUnique(guestDto.Email));
+        if (!result.IsSuccessfull()) 
+            throw new DomainRuleException(result?.Message ?? "");
         var guest = _mapper.Map<Guest>(guestDto);
         await _unitOfWork.GuestRepository.CreateAsync(guest);
         await _unitOfWork.SaveChangesAsync();
@@ -92,6 +92,16 @@ public class GuestsController : ControllerBase
 
         return Ok("Silindi");
     }
+
+    private IOutcome CheckEmailIsUnique(string email)
+    {
+        bool hasEmail = _unitOfWork.GuestRepository.GetQueryable().Any(g => g.Email == email);
+        
+        return hasEmail? new ErrorOutcome("Mail adresi zaten mevcuttur") : new SuccessOutcome();
+    }
+
+
+
 }
 
 

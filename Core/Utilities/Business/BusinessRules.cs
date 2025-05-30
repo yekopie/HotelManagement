@@ -1,4 +1,6 @@
-﻿using Core.Utilities.Results.Abstract;
+﻿using Core.Utilities.Results;
+using Core.Utilities.Results.Abstract;
+using Core.Utilities.Results.Concrete;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,15 +9,16 @@ using System.Threading.Tasks;
 
 namespace Core.Utilities.Business
 {
-    public class BusinessRules
+    public static class BusinessRules
     {
 
-        public IOutcome? Run(params IOutcome[] outcomes)
+        public static IOutcome? Run(params IOutcome[] outcomes)
         {
             if (outcomes != null)
             {
                 foreach (var outcome in outcomes)
                 {
+                    if(outcome == null) continue;
                     if(!outcome.IsSuccess)
                     {
                         return outcome;
@@ -25,6 +28,11 @@ namespace Core.Utilities.Business
             }
 
             return null;
+        }
+
+        public static bool IsSuccessfull(this IOutcome? outcome)   
+        { 
+            return (outcome != null && outcome.IsSuccess) ? true : false;
         }
 
     }

@@ -2,10 +2,8 @@
 {
     public class SuccessDataOutcome<TData> : DataOutcome<TData>
     {
-        public SuccessDataOutcome(TData data, bool isSuccess, string message) : base(data, true, string.Empty)
+        public SuccessDataOutcome(TData data, string message = "") : base(data, true, message)
         {
         }
     }
-
-
 }

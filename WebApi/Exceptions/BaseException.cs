@@ -1,5 +1,6 @@
 ﻿namespace WebApi.Exceptions
 {
+    // TODO: message null olabilir 
     public class BaseException : Exception
     {
         public IReadOnlyList<string> Errors { get; }

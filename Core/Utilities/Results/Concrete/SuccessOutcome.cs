@@ -1,8 +1,10 @@
-﻿namespace Core.Utilities.Results.Concrete
+﻿using Core.Utilities.Results.Concrete;
+
+namespace Core.Utilities.Results
 {
     public class SuccessOutcome : Outcome
     {
-        public SuccessOutcome(bool isSuccess, string message) : base(true, string.Empty)
+        public SuccessOutcome(string message = "") : base(true, message)
         {
         }
     }

@@ -28,7 +28,7 @@ namespace WebApi
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile));          
             builder.Services.AddValidatorsFromAssembly(typeof(CreateGuestDtoValidator).Assembly);
-            builder.Services.AddScoped(typeof(ValidationFilter<>));
+            //builder.Services.AddScoped(typeof(ValidationFilter<>));
             var app = builder.Build();
             
             // Configure the HTTP request pipeline.

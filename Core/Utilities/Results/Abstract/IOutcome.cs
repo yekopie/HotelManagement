@@ -8,7 +8,7 @@ namespace Core.Utilities.Results.Abstract
 {
     public interface IOutcome
     {
-        public bool IsSuccess { get; }
-        public string Message { get; }
+        string Message { get; }
+        bool IsSuccess { get; }
     }
 }
