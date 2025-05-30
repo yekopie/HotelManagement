@@ -39,11 +39,6 @@ public class MaintenancesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateMaintenanceDto maintenanceDto)
     {
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
         //Rezervasyon Çakışması kontrolü
         var existingMaintenance = await _unitOfWork.MaintenanceRepository.GetQueryable()
             .AnyAsync(m => m.RoomId == maintenanceDto.RoomId && m.Status == "Scheduled" &&

@@ -7,6 +7,9 @@ using DataAccess.UnitOfWork;
 using WebApi.Dtos.GuestDtos;
 using AutoMapper;
 using Entities.Concrete;
+using WebApi.Exceptions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using WebApi.ValidatonRules;
 
 namespace WebApi.Controllers;
 
@@ -42,6 +45,7 @@ public class GuestsController : ControllerBase
         return Ok(result);
     }
     [HttpPost]
+    [ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
     public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto guestDto)
     {
         bool emailExists = await _unitOfWork.GuestRepository.GetQueryable()
@@ -59,6 +63,7 @@ public class GuestsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ServiceFilter(typeof(ValidationFilter<UpdateGuestDto>))]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateGuestDto guestDto)
     {
         var existingGuest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
