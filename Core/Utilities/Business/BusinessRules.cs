@@ -12,26 +12,22 @@ namespace Core.Utilities.Business
     public static class BusinessRules
     {
 
-        public static IOutcome? Run(params IOutcome[] outcomes)
+        public static IOutcome Run(params IOutcome[] outcomes)
         {
-            if (outcomes != null)
+            foreach (var outcome in outcomes)
             {
-                foreach (var outcome in outcomes)
+                if (!outcome.IsSuccess)
                 {
-                    if(outcome == null) continue;
-                    if(!outcome.IsSuccess)
-                    {
-                        return outcome;
-                    }
-
+                    return outcome;
                 }
+
             }
 
-            return null;
+            return new SuccessOutcome();
         }
 
-        public static bool IsSuccessfull(this IOutcome? outcome)   
-        { 
+        public static bool IsSuccessfull(this IOutcome outcome)
+        {
             return (outcome != null && outcome.IsSuccess) ? true : false;
         }
 
