@@ -15,8 +15,6 @@ namespace WebApi.Dtos.RoomDtos
         public byte IsAvailable { get; set; }
         public byte IsClean { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<ReservationDto> Reservations { get; set; }
-        public List<MaintenanceDto> Maintenances { get; set; }
     }
 
 }

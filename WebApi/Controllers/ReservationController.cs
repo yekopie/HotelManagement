@@ -1,7 +1,14 @@
 ﻿using AutoMapper;
+using Core.Utilities.Business;
+using Core.Utilities.Exceptions;
+using Core.Utilities.Results.Abstract;
+using Core.Utilities.Results.Concrete;
 using DataAccess.UnitOfWork;
+using Entities.Concrete;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using WebApi.Dtos.ReservationDtos;
 
 namespace WebApi.Controllers;
 
@@ -9,160 +16,52 @@ namespace WebApi.Controllers;
 [ApiController]
 public class ReservationsController : ControllerBase
 {
-    //private IUnitOfWork _unitOfWork;
-    //private readonly IMapper _mapper;
+    private IUnitOfWork _unitOfWork;
+    private IMapper _mapper;
 
-    //public ReservationController(IUnitOfWork unitOfWork, IMapper mapper)
-    //{
-    //    _unitOfWork = unitOfWork;
-    //    _mapper = mapper;
-    //}
-    //[HttpGet("filtreli")]
-    //public async Task<IActionResult> GetFilteredReservations([FromQuery] string? filter = null)
-    //{
-    //    var reservationsQuery = _unitOfWork.ReservationRepository.GetFilteredQueryable(r =>
-    //        r.Guest.FirstName.ToLower().Contains((filter ?? string.Empty).ToLower()));
+    public ReservationsController(IUnitOfWork unitOfWork, IMapper mapper)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync()
+    {
+        var reservations = await _unitOfWork.ReservationRepository.GetAllAsync();
+        var reservationDtos = _mapper.Map<List<ReservationDto>>(reservations);
+        return Ok(reservationDtos);
+    }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
+    {
+        var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(id);
 
-    //    var reservations = reservationsQuery.ToList();
+        var result = BusinessRules.Run(IfReservationIsNotNull(reservation));
 
-    //    if (!reservations.Any())
-    //    {
-    //        return NotFound("Filtreye uygun rezervasyon bulunamadı.");
-    //    }
+        if (!result.IsSuccessfull())
+        {
+            throw new DomainRuleException(result.Message);
+        }
+        var reservationDto = _mapper.Map<ReservationDto>(reservation);
+        return Ok(reservationDto);
+    }
 
-    //    return Ok();
-    //}
-    //[HttpGet("{id}")]
-    //public async Task<IActionResult> GetReservationById(int id)
-    //{
-    //    var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(id);
-    //    if (reservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    return Ok(_mapper.Map<ReservationDto>(reservation));
-    //}
-    //[HttpPost]
-    //public async Task<IActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
-    //{
-    //    if (reservationDto == null)
-    //    {
-    //        return BadRequest("Rezervasyon bilgileri eksik.");
-    //    }
-    //    var reservation = _mapper.Map<Entities.Concrete.Reservation>(reservationDto);
-    //    await _unitOfWork.ReservationRepository.CreateAsync(reservation);
-    //    await _unitOfWork.SaveChangesAsync();
-    //    return CreatedAtAction(nameof(GetReservationById), new { id = reservation.Id }, _mapper.Map<ReservationDto>(reservation));
-    //}
-    //[HttpPut("{id}")]
-    //public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReservationDto reservationDto)
-    //{
-    //    if (reservationDto == null || id != reservationDto.Id)
-    //    {
-    //        return BadRequest("Rezervasyon bilgileri eksik veya ID uyuşmuyor.");
-    //    }
-    //    var existingReservation = await _unitOfWork.ReservationRepository.GetByIdAsync(id);
-    //    if (existingReservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    var updatedReservation = _mapper.Map<Entities.Concrete.Reservation>(reservationDto);
-    //    _unitOfWork.ReservationRepository.Update(updatedReservation);
-    //    await _unitOfWork.SaveChangesAsync();
-    //    return NoContent();
-    //}
-    //[HttpPut("confirm/{id}")]
-    //public async Task<IActionResult> ConfirmReservation(ReservationDto reservationDto)
-    //{
-    //    if (reservationDto == null)
-    //    {
-    //        return BadRequest("Rezervasyon bilgileri eksik.");
-    //    }
-    //    var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(reservationDto.Id);
-    //    if (reservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    reservation.IsConfirmed = true;
-    //    _unitOfWork.ReservationRepository.Update(reservation);
-    //    await _unitOfWork.SaveChangesAsync();
-    //    return NoContent();
+    [HttpPost]
+    public async Task<IActionResult> AddReservationAsync([FromBody] CreateReservationDto reservationDto)
+    {
+        var reservation = _mapper.Map<Reservation>(reservationDto);
+        await _unitOfWork.ReservationRepository.CreateAsync(reservation);
+        await _unitOfWork.SaveChangesAsync();
+        var reservationInfo = _mapper.Map<ReservationDto>(reservation);
 
-    //}
-    //[HttpPut("checkin/{id}")]
-    //public async Task<IActionResult> CheckInReservation(ReservationDto reservationDto)
-    //{
-    //    if (!ModelState.IsValid)
-    //    {
-    //        return BadRequest("Model henüz başlatılmadı.");
-    //    }
-    //    var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(reservationDto.Id);
-    //    if (reservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    //aynı oda + aynı tarihte rezervasyon kontrolü yapılabilir
-    //    if (reservation.CheckInDate <= DateTime.Now && reservation.CheckOutDate >= DateTime.Now)
-    //    {
-    //        return BadRequest("Rezervasyon zaten aktif.");
-    //    }
-    //    reservation.CheckInDate = DateTime.Now;
-    //    _unitOfWork.ReservationRepository.Update(reservation);
-    //    await _unitOfWork.SaveChangesAsync();
+        return Ok(reservationInfo);
+    }
 
-    //    // misafirin aynı otelde ikinci aktif rezervasyonu olamaz
-    //    bool hasActiveReservation = await _unitOfWork.ReservationRepository.GetAllFiltered(r => r.GuestId == reservation.GuestId && r.CheckInDate <= DateTime.Now && r.CheckOutDate >= DateTime.Now).AnyAsync();
-    //    if (hasActiveReservation)
-    //    {
-    //        return BadRequest("Misafirin zaten aktif bir rezervasyonu var.");
-    //    }
-    //    //check-in tarihi bugünün tarihinden önce olamaz    
-    //    if (reservation.CheckInDate < DateTime.Now)
-    //    {
-    //        return BadRequest("Check-in tarihi bugünden önce olamaz.");
-    //    }
-    //    return NoContent();
+    private IOutcome IfReservationIsNotNull(Reservation? reservation)
+    {
+        return (reservation != null) ? new SuccessOutcome() : new ErrorOutcome("Böyle bir rezervasyon yok");
+    }
 
-    //}
-    //[HttpPut("checkout/{id}")]
-    //public async Task<IActionResult> CheckOutReservation(ReservationDto reservationDto)
-    //{
-    //    if (reservationDto == null)
-    //    {
-    //        return BadRequest("Rezervasyon bilgileri eksik.");
-    //    }
-    //    var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(reservationDto.Id);
-    //    if (reservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    //check-out tarihi bugünün tarihinden önce olamaz
-    //    if (reservation.CheckOutDate < DateTime.Now)
-    //    {
-    //        return BadRequest("Check-out tarihi bugünden önce olamaz.");
-    //    }
-    //    reservation.CheckOutDate = DateTime.Now;
-    //    _unitOfWork.ReservationRepository.Update(reservation);
-    //    await _unitOfWork.SaveChangesAsync();
-    //    return NoContent();
-    //}
-    //[HttpDelete("{id}")]
-    //public async Task<IActionResult> DeleteReservation(int id)
-    //{
-    //    var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(id);
-    //    if (reservation == null)
-    //    {
-    //        return NotFound("Rezervasyon bulunamadı.");
-    //    }
-    //    // Rezervasyonun silinmeden önce kontrol edilmesi gereken durumlar olabilir, örneğin rezervasyonun onaylanmış olması gibi.
-    //    if (reservation.IsConfirmed)
-    //    {
-    //        return BadRequest("Onaylanmış rezervasyonlar silinemez.");
-    //    }
-    //    await _unitOfWork.ReservationRepository.GetByIdAsync(id);
-    //    _unitOfWork.ReservationRepository.Delete(reservation);
-    //    await _unitOfWork.SaveChangesAsync();
-    //    return NoContent();
-    //}
 
+    //private IOutcome IfReservationExists()
 }

@@ -1,19 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using WebApi.Dtos;
-using WebApi.Dtos.HotelDtos;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DataAccess.UnitOfWork;
 using WebApi.Dtos.GuestDtos;
 using AutoMapper;
 using Entities.Concrete;
-using WebApi.Exceptions;
-using Microsoft.AspNetCore.Http.HttpResults;
-using WebApi.ValidatonRules;
-using Core.Utilities.Results.Concrete;
+using DataAccess.UnitOfWork;
 using Core.Utilities.Results.Abstract;
+using Core.Utilities.Results.Concrete;
 using Core.Utilities.Business;
-using Core.Utilities.Results;
+using Core.Utilities.Exceptions;
+using WebApi.ValidatonRules;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace WebApi.Controllers;
 
@@ -31,80 +27,140 @@ public class GuestsController : ControllerBase
     }
 
     [HttpGet]
+    [SwaggerOperation(Summary = "Tüm misafirleri getirir", Description = "Veritabanındaki tüm misafirleri listeler.")]
+    [SwaggerResponse(200, "Başarılı istek", typeof(List<GuestDto>))]
     public async Task<IActionResult> GetAllAsync()
     {
         var guests = await _unitOfWork.GuestRepository.GetAllAsync();
         var result = _mapper.Map<List<GuestDto>>(guests);
         return Ok(result);
     }
+
     [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "ID'ye göre misafir getirir", Description = "Belirtilen ID'ye sahip misafiri getirir.")]
+    [SwaggerResponse(200, "Misafir bulundu", typeof(GuestDto))]
+    [SwaggerResponse(404, "Misafir bulunamadı")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
         var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
         if (guest == null)
-        {
-            return NotFound();
-        }
-        var result = _mapper.Map<GuestDto>(guest);
-        return Ok(result);
+            throw new NotFoundException($"{id} ID'li misafir bulunamadı");
+
+        var guestDto = _mapper.Map<GuestDto>(guest);
+        return Ok(guestDto);
+    }
+
+    [HttpGet("{id}/reservations")]
+    [SwaggerOperation(Summary = "Misafirin rezervasyonlarını getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
+    [SwaggerResponse(200, "Misafir ve rezervasyon bilgileri başarıyla getirildi", typeof(GuestWithReservationsDto))]
+    [SwaggerResponse(404, "Belirtilen ID'ye sahip misafir bulunamadı")]
+    public async Task<IActionResult> GetGuestReservationsByIdAsync(int id)
+    {
+        var guestReservations = await _unitOfWork.GuestRepository
+            .GetQueryable()
+            .Include(g => g.Reservations)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (guestReservations == null)
+            throw new NotFoundException($"{id} ID'li misafir bulunamadı.");
+
+        var guestReservationsDto = _mapper.Map<GuestWithReservationsDto>(guestReservations);
+        return Ok(guestReservationsDto);
+    }
+    [HttpGet("paged")]
+    [SwaggerOperation(Summary = "Misafirin rezervasyonlarını getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
+    [SwaggerResponse(200, "Misafir ve rezervasyon bilgileri başarıyla getirildi", typeof(GuestWithReservationsDto))]
+    [SwaggerResponse(404, "Belirtilen ID'ye sahip misafir bulunamadı")]
+    public async Task<IActionResult> GetPagedAsync([FromQuery] int currentPage, [FromQuery] int size)
+    {
+        (IEnumerable<Guest> guests, int totalCount) = await _unitOfWork.GuestRepository.GetPagedAsync(currentPage, size);
+
+        var guestDtos = _mapper.Map<List<GuestDto>>(guests);
+        return Ok(new { guestDtos, totalCount});
     }
     [HttpPost]
-    //[ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
+    [ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
+    [SwaggerOperation(Summary = "Yeni misafir oluşturur", Description = "Yeni bir misafir kaydı oluşturur.")]
+    [SwaggerResponse(200, "Oluşturuldu", typeof(GuestDto))]
+    [SwaggerResponse(400, "Geçersiz istek")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto guestDto)
     {
-        
         var result = BusinessRules.Run(CheckEmailIsUnique(guestDto.Email));
-        if (!result.IsSuccessfull()) 
-            throw new DomainRuleException(result?.Message ?? "");
+        if (!result.IsSuccessfull())
+            throw new DomainRuleException(result.Message);
+
         var guest = _mapper.Map<Guest>(guestDto);
         await _unitOfWork.GuestRepository.CreateAsync(guest);
         await _unitOfWork.SaveChangesAsync();
-        return Ok(guest);
+
+        _mapper.Map(guestDto, guest);
+        return Ok(guestDto);
     }
 
     [HttpPut("{id}")]
     [ServiceFilter(typeof(ValidationFilter<UpdateGuestDto>))]
-    public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateGuestDto guestDto)
+    [SwaggerOperation(Summary = "Misafir bilgilerini günceller", Description = "Verilen ID'deki misafirin bilgilerini günceller.")]
+    [SwaggerResponse(200, "Güncelleme başarılı", typeof(GuestDto))]
+    [SwaggerResponse(404, "Misafir bulunamadı")]
+    public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateGuestDto updateGuestDto)
     {
-        var existingGuest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
-        if (existingGuest == null) // iş kuralı
-        {
-            return NotFound();
-        }
-        var guest = _mapper.Map<Guest>(guestDto);
-        guest.Id = id; 
-        _unitOfWork.GuestRepository.Update(guest);
-        await _unitOfWork.SaveChangesAsync();
+        var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
+        if (guest == null) throw new NotFoundException($"{id} ID'li misafir bulunamadı");
 
-        return Ok(guest);
+        if (updateGuestDto.Email != guest.Email)
+        {
+            var result = BusinessRules.Run(CheckEmailIsUnique(updateGuestDto.Email));
+            if (!result.IsSuccessfull()) throw new DomainRuleException(result.Message);
+
+            _mapper.Map(updateGuestDto, guest);
+            _unitOfWork.GuestRepository.Update(guest);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        var guestDto = _mapper.Map<GuestDto>(guest);
+        return Ok(guestDto);
     }
 
     [HttpDelete("{id}")]
+    [SwaggerOperation(Summary = "Misafiri siler", Description = "Belirtilen ID'deki misafiri siler.")]
+    [SwaggerResponse(200, "Silme başarılı")]
+    [SwaggerResponse(404, "Misafir bulunamadı")]
     public async Task<IActionResult> DeleteAsync([FromRoute] int id)
     {
         var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
-        if (guest == null)
-        {
-            return NotFound();
-        }
+        if (guest == null) throw new NotFoundException($"{id}'li misafir bulunamadı");
+
         _unitOfWork.GuestRepository.Delete(guest);
         await _unitOfWork.SaveChangesAsync();
 
-        return Ok("Silindi");
+        return Ok("misafir başarıyla silindi");
     }
 
+    [HttpGet("search")]
+    [SwaggerOperation(Summary = "Misafir arar", Description = "İsim, email veya telefon bilgisine göre misafir arar.")]
+    [SwaggerResponse(200, "Arama başarılı", typeof(List<GuestDto>))]
+    public async Task<IActionResult> SearchAsync([FromQuery] string? query)
+    {
+        var guests = await _unitOfWork.GuestRepository
+            .GetQueryable()
+            .Where(g =>
+                (g.FirstName + " " + g.LastName).Contains(query ?? "") ||
+                g.Email.Contains(query ?? "") ||
+                g.Phone.Contains(query ?? "")
+            ).ToListAsync();
+
+        var guestDtos = _mapper.Map<List<GuestDto>>(guests);
+        return Ok(guestDtos);
+    }
+
+    /// <summary>
+    /// Daha önceden eklenmiş böyle bir email adresi var mı ?
+    /// </summary>
     private IOutcome CheckEmailIsUnique(string email)
     {
-        bool hasEmail = _unitOfWork.GuestRepository.GetQueryable().Any(g => g.Email == email);
-        
-        return hasEmail? new ErrorOutcome("Mail adresi zaten mevcuttur") : new SuccessOutcome();
+        bool exists = _unitOfWork.GuestRepository.Any(g => g.Email == email);
+
+        return exists
+            ? new ErrorOutcome("Bu e-posta adresi zaten kayıtlı.")
+            : new SuccessOutcome();
     }
-
-
-
 }
-
-
-
-
-

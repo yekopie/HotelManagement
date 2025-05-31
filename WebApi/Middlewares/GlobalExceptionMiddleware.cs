@@ -1,4 +1,4 @@
-﻿using WebApi.Exceptions;
+﻿using Core.Utilities.Exceptions;
 
 namespace WebApi.Middlewares
 {

@@ -19,13 +19,13 @@ namespace WebApi.ValidatonRules
             var dto = context.ActionArguments.Values.OfType<T>().FirstOrDefault();
             if (dto == null)
             {
-                throw new WebApi.Exceptions.ValidationException($"{nameof(dto)}, null olamaz");
+                throw new Core.Utilities.Exceptions.ValidationException($"{nameof(dto)}, null olamaz");
             }
             var result = await _validator.ValidateAsync(dto);
             if (!result.IsValid)
             {
                 var errors = result.Errors.Select(e => e.ErrorMessage).ToList();
-                throw new WebApi.Exceptions.ValidationException("Veri Doğrulama Başarısız", errors);
+                throw new Core.Utilities.Exceptions.ValidationException("Veri Doğrulama Başarısız", errors);
             }
 
             await next();

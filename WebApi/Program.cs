@@ -18,20 +18,19 @@ namespace WebApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            
             builder.Services.AddControllers();
-
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddAutoMapper(typeof(MappingProfile));          
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddValidatorsFromAssembly(typeof(CreateGuestDtoValidator).Assembly);
-            //builder.Services.AddScoped(typeof(ValidationFilter<>));
+            builder.Services.AddScoped(typeof(ValidationFilter<>));
             var app = builder.Build();
-            
-            // Configure the HTTP request pipeline.
+
+
+            // Swagger middleware'lerini ekle
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -42,7 +41,7 @@ namespace WebApi
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
-        
+
             app.Run();
         }
     }

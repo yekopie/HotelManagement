@@ -10,6 +10,5 @@ namespace WebApi.Dtos.GuestDtos
         public string LastName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
-        public List<ReservationDto> Reservations { get; set; }
     }
 }
