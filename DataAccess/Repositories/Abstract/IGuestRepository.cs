@@ -9,5 +9,6 @@ namespace DataAccess.Repositories.Abstract
 {
     public interface IGuestRepository : IRepositoryBase<Guest>
     {
+        
     }
 }

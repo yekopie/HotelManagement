@@ -14,8 +14,10 @@ namespace DataAccess.Repositories.Abstract
         public void Delete(TEntity entity);
         public Task CreateAsync(TEntity entity);
         public void Update(TEntity entity);
-        Task AddRangeAsync(IEnumerable<TEntity> entities);
+        Task CreateRangeAsync(IEnumerable<TEntity> entities);
         void RemoveRange(IEnumerable<TEntity> entities);
+        public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predict);
+        public bool Any(Expression<Func<TEntity, bool>> predict);
 
     }
 }

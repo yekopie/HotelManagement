@@ -1,5 +1,6 @@
 ﻿using DataAccess.Context;
 using DataAccess.Repositories.Abstract;
+using Entities.Concrete;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -15,7 +16,7 @@ namespace DataAccess.Repositories.Concrete
             _dbSet = context.Set<TEntity>();
         }
 
-        public async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        public async Task CreateRangeAsync(IEnumerable<TEntity> entities)
         {
             await _dbSet.AddRangeAsync(entities);
         }
@@ -28,11 +29,6 @@ namespace DataAccess.Repositories.Concrete
         public void Delete(TEntity entity)
         {
             _dbSet.Remove(entity);
-        }
-
-        public IQueryable<TEntity> GetAll()
-        {
-            return _dbSet.AsNoTracking();
         }
 
         public async Task<IEnumerable<TEntity>> GetAllAsync()
@@ -90,6 +86,16 @@ namespace DataAccess.Repositories.Concrete
         public void Update(TEntity entity)
         {
             _dbSet.Update(entity);
+        }
+
+        public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predict)
+        {
+            return await _dbSet.AsNoTracking().AnyAsync(predict);
+        }
+
+        public bool Any(Expression<Func<TEntity, bool>> predict)
+        {
+            return _dbSet.AsNoTracking().Any(predict);   
         }
     }
 }
