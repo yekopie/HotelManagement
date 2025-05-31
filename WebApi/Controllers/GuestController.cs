@@ -52,7 +52,6 @@ public class GuestsController : ControllerBase
 
     [HttpGet("{id}/reservations")]
     [SwaggerOperation(Summary = "Misafirin rezervasyonlarını getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
-    [SwaggerResponse(200, "Misafir ve rezervasyon bilgileri başarıyla getirildi", typeof(GuestWithReservationsDto))]
     [SwaggerResponse(404, "Belirtilen ID'ye sahip misafir bulunamadı")]
     public async Task<IActionResult> GetGuestReservationsByIdAsync(int id)
     {
@@ -68,9 +67,7 @@ public class GuestsController : ControllerBase
         return Ok(guestReservationsDto);
     }
     [HttpGet("paged")]
-    [SwaggerOperation(Summary = "Misafirin rezervasyonlarını getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
-    [SwaggerResponse(200, "Misafir ve rezervasyon bilgileri başarıyla getirildi", typeof(GuestWithReservationsDto))]
-    [SwaggerResponse(404, "Belirtilen ID'ye sahip misafir bulunamadı")]
+    [SwaggerOperation(Summary = "Misafirleri sayfalayarak getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] int currentPage, [FromQuery] int size)
     {
         (IEnumerable<Guest> guests, int totalCount) = await _unitOfWork.GuestRepository.GetPagedAsync(currentPage, size);
@@ -81,8 +78,6 @@ public class GuestsController : ControllerBase
     [HttpPost]
     [ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
     [SwaggerOperation(Summary = "Yeni misafir oluşturur", Description = "Yeni bir misafir kaydı oluşturur.")]
-    [SwaggerResponse(200, "Oluşturuldu", typeof(GuestDto))]
-    [SwaggerResponse(400, "Geçersiz istek")]
     public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto guestDto)
     {
         var result = BusinessRules.Run(CheckEmailIsUnique(guestDto.Email));
@@ -100,8 +95,6 @@ public class GuestsController : ControllerBase
     [HttpPut("{id}")]
     [ServiceFilter(typeof(ValidationFilter<UpdateGuestDto>))]
     [SwaggerOperation(Summary = "Misafir bilgilerini günceller", Description = "Verilen ID'deki misafirin bilgilerini günceller.")]
-    [SwaggerResponse(200, "Güncelleme başarılı", typeof(GuestDto))]
-    [SwaggerResponse(404, "Misafir bulunamadı")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateGuestDto updateGuestDto)
     {
         var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
@@ -122,8 +115,6 @@ public class GuestsController : ControllerBase
 
     [HttpDelete("{id}")]
     [SwaggerOperation(Summary = "Misafiri siler", Description = "Belirtilen ID'deki misafiri siler.")]
-    [SwaggerResponse(200, "Silme başarılı")]
-    [SwaggerResponse(404, "Misafir bulunamadı")]
     public async Task<IActionResult> DeleteAsync([FromRoute] int id)
     {
         var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
@@ -137,7 +128,6 @@ public class GuestsController : ControllerBase
 
     [HttpGet("search")]
     [SwaggerOperation(Summary = "Misafir arar", Description = "İsim, email veya telefon bilgisine göre misafir arar.")]
-    [SwaggerResponse(200, "Arama başarılı", typeof(List<GuestDto>))]
     public async Task<IActionResult> SearchAsync([FromQuery] string? query)
     {
         var guests = await _unitOfWork.GuestRepository
