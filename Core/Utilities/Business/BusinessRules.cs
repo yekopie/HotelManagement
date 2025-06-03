@@ -1,6 +1,5 @@
-﻿using Core.Utilities.Results;
-using Core.Utilities.Results.Abstract;
-using Core.Utilities.Results.Concrete;
+﻿using Core.Utilities.Results.Abstract;
+using Core.Utilities.Results.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +22,7 @@ namespace Core.Utilities.Business
 
             }
 
-            return new SuccessOutcome();
+            return Outcomes.Success;
         }
 
         public static bool IsSuccessfull(this IOutcome outcome)
