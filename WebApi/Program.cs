@@ -1,14 +1,15 @@
-
-using Business.ValidatonRules.GuestValidationRules;
+using Business.Services.Abstract;
+using Business.Services.Concrete;
 using DataAccess.Context;
 using DataAccess.UnitOfWork;
 using FluentValidation;
+using Mapping;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using WebApi.Mapping;
+using Validation.GuestValidators;
+using WebApi.Filters;
 using WebApi.Middlewares;
-using WebApi.ValidatonRules;
 
 namespace WebApi
 {
@@ -26,6 +27,8 @@ namespace WebApi
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddValidatorsFromAssembly(typeof(CreateGuestDtoValidator).Assembly);
+            builder.Services.AddScoped<IGuestService, GuestService>();
+            builder.Services.AddScoped<IReservationService, ReservationService>();
             builder.Services.AddScoped(typeof(ValidationFilter<>));
             var app = builder.Build();
 

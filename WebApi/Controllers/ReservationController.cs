@@ -1,14 +1,8 @@
 ﻿using AutoMapper;
-using Core.Utilities.Business;
-using Core.Utilities.Exceptions;
-using Core.Utilities.Results.Abstract;
-using Core.Utilities.Results.Concrete;
-using DataAccess.UnitOfWork;
-using Entities.Concrete;
-using Microsoft.AspNetCore.Http;
+using Business.Services.Abstract;
+using Dtos.ReservationDtos;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using WebApi.Dtos.ReservationDtos;
+using WebApi.Responses;
 
 namespace WebApi.Controllers;
 
@@ -16,52 +10,66 @@ namespace WebApi.Controllers;
 [ApiController]
 public class ReservationsController : ControllerBase
 {
-    private IUnitOfWork _unitOfWork;
-    private IMapper _mapper;
+    private readonly IReservationService _reservationService;
 
-    public ReservationsController(IUnitOfWork unitOfWork, IMapper mapper)
+    public ReservationsController(IReservationService reservationService)
     {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
+        _reservationService = reservationService;
     }
-    [HttpGet]
+
+    [HttpGet()]
     public async Task<IActionResult> GetAllAsync()
     {
-        var reservations = await _unitOfWork.ReservationRepository.GetAllAsync();
-        var reservationDtos = _mapper.Map<List<ReservationDto>>(reservations);
-        return Ok(reservationDtos);
+        var result = await _reservationService.GetAllReservationsAsync();
+        return Ok(result);
     }
+
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
+    public async Task<IActionResult> GetByIdAsync(int id)
     {
-        var reservation = await _unitOfWork.ReservationRepository.GetByIdAsync(id);
-
-        var result = BusinessRules.Run(IfReservationIsNotNull(reservation));
-
-        if (!result.IsSuccessfull())
-        {
-            throw new DomainRuleException(result.Message);
-        }
-        var reservationDto = _mapper.Map<ReservationDto>(reservation);
-        return Ok(reservationDto);
+        var result = await _reservationService.GetReservationByIdAsync(id);
+        return Ok(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddReservationAsync([FromBody] CreateReservationDto reservationDto)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateReservationDto dto)
     {
-        var reservation = _mapper.Map<Reservation>(reservationDto);
-        await _unitOfWork.ReservationRepository.CreateAsync(reservation);
-        await _unitOfWork.SaveChangesAsync();
-        var reservationInfo = _mapper.Map<ReservationDto>(reservation);
-
-        return Ok(reservationInfo);
+        var result = await _reservationService.CreateReservationAsync(dto);
+        return CreatedAtAction(nameof(GetByIdAsync),"Reservations", new { id = result.Data.Id }, result);
     }
 
-    private IOutcome IfReservationIsNotNull(Reservation? reservation)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAsync(int id, [FromBody] UpdateReservationDto dto)
     {
-        return (reservation != null) ? new SuccessOutcome() : new ErrorOutcome("Böyle bir rezervasyon yok");
+        var result = await _reservationService.UpdateReservationAsync(id, dto);
+        return Ok(result);
     }
 
+    [HttpPost("{id}/confirm")]
+    public async Task<IActionResult> ConfirmReservationAsync(int id)
+    {
+        var result = await _reservationService.ConfirmReservationAsync(id);
+        return Ok(result);
+    }
 
-    //private IOutcome IfReservationExists()
+    [HttpPost("{id}/checkin")]
+    public async Task<IActionResult> CheckInReservationAsync(int id)
+    {
+        var result = await _reservationService.CheckInReservationAsync(id);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/checkout")]
+    public async Task<IActionResult> CheckOutReservationAsync(int id)
+    {
+        var result = await _reservationService.CheckOutReservationAsync(id);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        await _reservationService.DeleteReservationAsync(id);
+        return NoContent();
+    }
 }

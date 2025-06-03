@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using DataAccess.UnitOfWork;
+using Dtos.PaymentDtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Dtos.PaymentDtos;
 
 namespace WebApi.Controllers;
 

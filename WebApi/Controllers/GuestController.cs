@@ -1,15 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApi.Dtos.GuestDtos;
-using AutoMapper;
 using Entities.Concrete;
 using DataAccess.UnitOfWork;
 using Core.Utilities.Results.Abstract;
 using Core.Utilities.Results.Concrete;
 using Core.Utilities.Business;
 using Core.Utilities.Exceptions;
-using WebApi.ValidatonRules;
 using Swashbuckle.AspNetCore.Annotations;
+using Dtos.GuestDtos;
+using AutoMapper;
+using WebApi.Filters;
+using Business.Services.Abstract;
+using WebApi.Responses;
 
 namespace WebApi.Controllers;
 
@@ -17,13 +19,11 @@ namespace WebApi.Controllers;
 [ApiController]
 public class GuestsController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IGuestService _guestService;
 
-    public GuestsController(IUnitOfWork unitOfWork, IMapper mapper)
+    public GuestsController(IGuestService guestService)
     {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
+        _guestService = guestService;
     }
 
     [HttpGet]
@@ -31,8 +31,7 @@ public class GuestsController : ControllerBase
     [SwaggerResponse(200, "Başarılı istek", typeof(List<GuestDto>))]
     public async Task<IActionResult> GetAllAsync()
     {
-        var guests = await _unitOfWork.GuestRepository.GetAllAsync();
-        var result = _mapper.Map<List<GuestDto>>(guests);
+        var result = await _guestService.GetAllAsync();
         return Ok(result);
     }
 
@@ -42,54 +41,32 @@ public class GuestsController : ControllerBase
     [SwaggerResponse(404, "Misafir bulunamadı")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
-        var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
-        if (guest == null)
-            throw new NotFoundException($"{id} ID'li misafir bulunamadı");
+        var result = await _guestService.GetByIdAsync(id);
 
-        var guestDto = _mapper.Map<GuestDto>(guest);
-        return Ok(guestDto);
+        return Ok(result);
     }
-
     [HttpGet("{id}/reservations")]
     [SwaggerOperation(Summary = "Misafirin rezervasyonlarını getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
     [SwaggerResponse(404, "Belirtilen ID'ye sahip misafir bulunamadı")]
-    public async Task<IActionResult> GetGuestReservationsByIdAsync(int id)
+    public async Task<IActionResult> GetWithReservationsByIdAsync(int id)
     {
-        var guestReservations = await _unitOfWork.GuestRepository
-            .GetQueryable()
-            .Include(g => g.Reservations)
-            .FirstOrDefaultAsync(g => g.Id == id);
-
-        if (guestReservations == null)
-            throw new NotFoundException($"{id} ID'li misafir bulunamadı.");
-
-        var guestReservationsDto = _mapper.Map<GuestWithReservationsDto>(guestReservations);
-        return Ok(guestReservationsDto);
+        var result = await _guestService.GetWithReservationsAsync(id);
+        return Ok(result);
     }
     [HttpGet("paged")]
     [SwaggerOperation(Summary = "Misafirleri sayfalayarak getirir", Description = "Belirtilen ID'ye sahip misafirin rezervasyon bilgileriyle birlikte döner.")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] int currentPage, [FromQuery] int size)
     {
-        (IEnumerable<Guest> guests, int totalCount) = await _unitOfWork.GuestRepository.GetPagedAsync(currentPage, size);
-
-        var guestDtos = _mapper.Map<List<GuestDto>>(guests);
-        return Ok(new { guestDtos, totalCount});
+        var result = await _guestService.GetPagedAsync(currentPage, size);
+        return Ok(result);
     }
     [HttpPost]
     [ServiceFilter(typeof(ValidationFilter<CreateGuestDto>))]
     [SwaggerOperation(Summary = "Yeni misafir oluşturur", Description = "Yeni bir misafir kaydı oluşturur.")]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto guestDto)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateGuestDto newGuestDto)
     {
-        var result = BusinessRules.Run(CheckEmailIsUnique(guestDto.Email));
-        if (!result.IsSuccessfull())
-            throw new DomainRuleException(result.Message);
-
-        var guest = _mapper.Map<Guest>(guestDto);
-        await _unitOfWork.GuestRepository.CreateAsync(guest);
-        await _unitOfWork.SaveChangesAsync();
-
-        _mapper.Map(guestDto, guest);
-        return Ok(guestDto);
+        var result = await _guestService.CreateAsync(newGuestDto);
+        return CreatedAtAction(nameof(GetByIdAsync), "Guests", new { id = result.Data.Id}, result);
     }
 
     [HttpPut("{id}")]
@@ -97,60 +74,24 @@ public class GuestsController : ControllerBase
     [SwaggerOperation(Summary = "Misafir bilgilerini günceller", Description = "Verilen ID'deki misafirin bilgilerini günceller.")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpdateGuestDto updateGuestDto)
     {
-        var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
-        if (guest == null) throw new NotFoundException($"{id} ID'li misafir bulunamadı");
-
-        if (updateGuestDto.Email != guest.Email)
-        {
-            var result = BusinessRules.Run(CheckEmailIsUnique(updateGuestDto.Email));
-            if (!result.IsSuccessfull()) throw new DomainRuleException(result.Message);
-
-            _mapper.Map(updateGuestDto, guest);
-            _unitOfWork.GuestRepository.Update(guest);
-            await _unitOfWork.SaveChangesAsync();
-        }
-        var guestDto = _mapper.Map<GuestDto>(guest);
-        return Ok(guestDto);
+        var result = await _guestService.UpdateAsync(id, updateGuestDto);
+        return Ok(result);
     }
 
     [HttpDelete("{id}")]
     [SwaggerOperation(Summary = "Misafiri siler", Description = "Belirtilen ID'deki misafiri siler.")]
     public async Task<IActionResult> DeleteAsync([FromRoute] int id)
     {
-        var guest = await _unitOfWork.GuestRepository.GetByIdAsync(id);
-        if (guest == null) throw new NotFoundException($"{id}'li misafir bulunamadı");
-
-        _unitOfWork.GuestRepository.Delete(guest);
-        await _unitOfWork.SaveChangesAsync();
-
-        return Ok("misafir başarıyla silindi");
+        await _guestService.DeleteAsync(id);
+        return NoContent();
     }
 
     [HttpGet("search")]
     [SwaggerOperation(Summary = "Misafir arar", Description = "İsim, email veya telefon bilgisine göre misafir arar.")]
     public async Task<IActionResult> SearchAsync([FromQuery] string? query)
     {
-        var guests = await _unitOfWork.GuestRepository
-            .GetQueryable()
-            .Where(g =>
-                (g.FirstName + " " + g.LastName).Contains(query ?? "") ||
-                g.Email.Contains(query ?? "") ||
-                g.Phone.Contains(query ?? "")
-            ).ToListAsync();
-
-        var guestDtos = _mapper.Map<List<GuestDto>>(guests);
-        return Ok(guestDtos);
+        var result = await _guestService.SearchAsync(query);
+        return Ok(result);
     }
 
-    /// <summary>
-    /// Daha önceden eklenmiş böyle bir email adresi var mı ?
-    /// </summary>
-    private IOutcome CheckEmailIsUnique(string email)
-    {
-        bool exists = _unitOfWork.GuestRepository.Any(g => g.Email == email);
-
-        return exists
-            ? new ErrorOutcome("Bu e-posta adresi zaten kayıtlı.")
-            : new SuccessOutcome();
-    }
 }

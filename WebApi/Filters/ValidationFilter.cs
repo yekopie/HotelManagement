@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 
 
-namespace WebApi.ValidatonRules
+namespace WebApi.Filters
 {
     public class ValidationFilter<T> : IAsyncActionFilter where T : class
     {
