@@ -9,12 +9,6 @@ using DataAccess.UnitOfWork;
 using Dtos.GuestDtos;
 using Entities.Concrete;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Business.Services.Concrete
 {
@@ -28,7 +22,7 @@ namespace Business.Services.Concrete
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-
+        
         public async Task<IDataOutcome<List<GuestDto>>> GetAllAsync()
         {
             var guests = await _unitOfWork.GuestRepository.GetAllAsync();

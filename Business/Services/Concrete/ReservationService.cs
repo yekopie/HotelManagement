@@ -6,12 +6,12 @@ using Core.Utilities.Results.Abstract;
 using Core.Utilities.Results.Concrete;
 using Core.Utilities.Results.Constants;
 using DataAccess.UnitOfWork;
-using Dtos.GuestDtos;
 using Dtos.ReservationDtos;
 using Entities.Concrete;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Business.Services.Concrete
 {
+    // TODO: PENALTY HESAPLAMASI YAPILACAK
+    // TODO: CHECKIN YAPILAN REZERVASYON, CHECKOUT YAPILMADAN SİLİNEMEZ
     public class ReservationService : IReservationService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -126,13 +126,11 @@ namespace Business.Services.Concrete
 
             reservation.Status = ReservationStatus.CheckedOut;
 
-            // İptal politikası ve ceza uygulaması burada yapılabilir
-            // Örnek: Penalty hesapla ve uygula (opsiyonel)
-
             await _unitOfWork.SaveChangesAsync();
 
             return new SuccessOutcome("Çıkış yapıldı.");
         }
+
 
         public async Task DeleteReservationAsync(int id)
         {
@@ -142,13 +140,18 @@ namespace Business.Services.Concrete
             _unitOfWork.ReservationRepository.Delete(reservation);
             await _unitOfWork.SaveChangesAsync();
         }
+        public async Task<IDataOutcome<List<ReservationDto>>> GetAllReservationsAsync()
+        {
+            var reservations = await _unitOfWork.ReservationRepository.GetAllAsync();
+            return new SuccessDataOutcome<List<ReservationDto>>(_mapper.Map<List<ReservationDto>>(reservations));
+        }
 
+        // Business Rule
         private IOutcome CheckRoomExists(int roomId)
         {
-            var room = _unitOfWork.RoomRepository.GetByIdAsync(roomId).Result;
-            if (room == null)
-                throw new NotFoundException("Oda bulunamadı");
-            return Outcomes.Success;
+            bool exists = _unitOfWork.RoomRepository.Any(r => r.Id == roomId);
+            
+            return exists ? Outcomes.Success : throw new NotFoundException("Oda bulunamadı"); ;
         }
 
         private IOutcome CheckDateConflict(int roomId, DateTime checkIn, DateTime checkOut)
@@ -169,18 +172,14 @@ namespace Business.Services.Concrete
             return Outcomes.Success;
         }
 
+        // TODO: CalculateTotalAmountAsync -> Saat penalty kısmı baz alınarak hesaplama yapılabilir.
         private async Task<decimal> CalculateTotalAmountAsync(int roomId, DateTime checkIn, DateTime checkOut)
         {
             var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId)
                        ?? throw new NotFoundException("Oda bulunamadı.");
-            int nights = (checkOut - checkIn).Days;
+            int nights = (int)Math.Ceiling((checkOut - checkIn).TotalDays); // (!) 1 saat geçerse bile tam ücret alır 
             return room.PricePerNight * nights;
         }
 
-        public async Task<IDataOutcome<List<ReservationDto>>> GetAllReservationsAsync()
-        {
-            var reservations = await _unitOfWork.ReservationRepository.GetAllAsync();
-            return new SuccessDataOutcome<List<ReservationDto>>(_mapper.Map<List<ReservationDto>>(reservations));
-        }
     }
 }

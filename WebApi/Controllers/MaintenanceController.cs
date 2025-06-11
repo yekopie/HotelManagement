@@ -10,6 +10,7 @@ namespace WebApi.Controllers;
 [ApiController]
 public class MaintenancesController : ControllerBase
 {
+    //TODO: Servis katmanına çekilecek
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     public MaintenancesController(IUnitOfWork unitOfWork, IMapper mapper)

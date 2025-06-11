@@ -7,6 +7,7 @@ namespace Business.Services.Concrete
 {
     public class RoomTypeService : IRoomTypeService
     {
+        // TODO: RoomType, en az bir oda tarafından kullanılıyorsa silme reddedilir(409).
         public Task<IDataOutcome<RoomTypeDto>> CreateRoomTypeAsync(CreateRoomTypeDto newRoomType)
         {
             throw new NotImplementedException();

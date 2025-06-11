@@ -2,7 +2,6 @@
 using Business.Services.Abstract;
 using Dtos.ReservationDtos;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Responses;
 
 namespace WebApi.Controllers;
 
@@ -25,6 +24,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [ActionName(nameof(GetByIdAsync))]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
         var result = await _reservationService.GetReservationByIdAsync(id);
@@ -35,7 +35,8 @@ public class ReservationsController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] CreateReservationDto dto)
     {
         var result = await _reservationService.CreateReservationAsync(dto);
-        return CreatedAtAction(nameof(GetByIdAsync),"Reservations", new { id = result.Data.Id }, result);
+        return CreatedAtAction(nameof(GetByIdAsync), new { id = result.Data.Id }, result);
+        //return Ok(result);
     }
 
     [HttpPut("{id}")]

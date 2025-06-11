@@ -1,12 +1,16 @@
 ﻿using Business.Services.Abstract;
 using Core.Utilities.Results.Abstract;
 using Dtos.RoomDtos;
+using Entities.Concrete;
 using System.Collections.Immutable;
+using System.Security.Cryptography;
 
 namespace Business.Services.Concrete
 {
     public class RoomService : IRoomService
     {
+        //TODO: Çakışan (RoomId, tarih) kayıtları olan odalar hariç tutulur.
+        //TODO: Kapasite parametresi varsa RoomType.Capacity ≥ istenen kapasite olmalıdır.
         public Task<IDataOutcome<RoomDto>> CreateRoomAsync(int hotelId, CreateRoomDto newRoom)
         {
             throw new NotImplementedException();
